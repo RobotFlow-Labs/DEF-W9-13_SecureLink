@@ -1,0 +1,90 @@
+name: securelink
+version: "0.1.0"
+description: >
+  Cross-layer UAV authentication via RF (CSI phase error) and MEMS
+  (accelerometer, barometer, ToF) fingerprint fusion with attention-based
+  multimodal learning and one-class SVM for open-world detection.
+domain: defense
+category: uav-authentication
+paper:
+  title: "Securing UAV Communications by Fusing Cross-Layer Fingerprints"
+  arxiv: "2511.05796"
+  venue: "IEEE Internet of Things Journal, 2025"
+  authors:
+    - "Yong Huang"
+    - "Ruihao Li"
+    - "Mingyang Chen"
+    - "Feiyang Zhao"
+    - "Dalong Zhang"
+    - "Wanqing Tu"
+
+capabilities:
+  - uav-authentication
+  - impersonation-detection
+  - rf-fingerprinting
+  - mems-fingerprinting
+  - multimodal-fusion
+  - open-world-classification
+
+inputs:
+  - name: csi_phase_errors
+    type: tensor
+    shape: [M, K]
+    description: "CSI phase error sequence (M frames, K subcarriers)"
+  - name: mems_telemetry
+    type: tensor
+    shape: [M, 8]
+    description: "MEMS telemetry sequence (M frames, 8 sensor fields)"
+  - name: claimed_uav_id
+    type: int
+    description: "UAV ID to verify authentication against"
+
+outputs:
+  - name: authenticated
+    type: bool
+    description: "Whether the UAV is authenticated as the claimed identity"
+  - name: confidence
+    type: float
+    description: "Authentication confidence score"
+  - name: matched_uav_id
+    type: int
+    description: "Best-matching registered UAV ID"
+
+api:
+  port: 8080
+  endpoints:
+    health: /health
+    ready: /ready
+    info: /info
+    predict: /predict
+
+docker:
+  base_image: "ghcr.io/robotflow-labs/anima-serve:jazzy"
+  dockerfile: "Dockerfile.serve"
+  compose: "docker-compose.serve.yml"
+
+ros2:
+  node_name: "securelink_node"
+  subscriptions:
+    - topic: "/uav/csi"
+      msg_type: "std_msgs/msg/Float32MultiArray"
+    - topic: "/uav/telemetry"
+      msg_type: "std_msgs/msg/Float32MultiArray"
+  publications:
+    - topic: "/uav/auth_result"
+      msg_type: "std_msgs/msg/String"
+
+hf_repo: "ilessio-aiflowlab/securelink"
+git_prefix: "[SECURELINK]"
+
+hardware:
+  min_vram_mb: 1024
+  recommended_vram_mb: 2048
+  gpu_count: 1
+
+metrics:
+  closed_world_accuracy: 0.9861
+  closed_world_tnr: 0.9904
+  open_world_accuracy: 0.9754
+  open_world_tnr: 0.9695
+  inference_time_ms: 15

@@ -1,0 +1,48 @@
+# SecureLink — 3-layer Docker build for serving
+# Layer 1: anima-base (ROS2 + CycloneDDS + anima_msgs + uv)
+# Layer 2: anima-serve (FastAPI + AnimaNode + HF weight downloader)
+# Layer 3: securelink (module code + model + OC-SVM)
+
+FROM ghcr.io/robotflow-labs/anima-serve:jazzy AS base
+
+# Module metadata
+LABEL org.opencontainers.image.title="SecureLink"
+LABEL org.opencontainers.image.description="Cross-layer UAV authentication via RF+MEMS fingerprint fusion"
+LABEL org.opencontainers.image.version="0.1.0"
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml .
+COPY src/ src/
+COPY configs/ configs/
+COPY anima_module.yaml .
+
+# Install dependencies
+RUN uv pip install --system -e ".[serve]" \
+    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
+    && uv pip install --system scikit-learn pandas scipy
+
+# Create weight directory
+RUN mkdir -p /data/weights
+
+# Environment
+ENV ANIMA_MODULE_NAME=securelink
+ENV ANIMA_MODULE_VERSION=0.1.0
+ENV ANIMA_HF_REPO=ilessio-aiflowlab/securelink
+ENV ANIMA_DEVICE=auto
+ENV ANIMA_WEIGHT_FORMAT=auto
+ENV ANIMA_SERVE_PORT=8080
+ENV ANIMA_WEIGHT_DIR=/data/weights
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:${ANIMA_SERVE_PORT}/health || exit 1
+
+# Expose port
+EXPOSE ${ANIMA_SERVE_PORT}
+
+# Entry point — start FastAPI server
+CMD ["python", "-m", "uvicorn", "securelink.serve:app", \
+     "--host", "0.0.0.0", "--port", "8080"]

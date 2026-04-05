@@ -1,0 +1,68 @@
+# SecureLink paper-exact hyperparameters
+# Paper: Securing UAV Communications by Fusing Cross-Layer Fingerprints (2511.05796)
+
+[data]
+data_root = "repositories/SecureLink_data"
+sample_length = 6                     # M = 6 frames per sample
+csi_subcarriers = 52                  # 52 Wi-Fi subcarriers
+mems_fields = ["pitch", "roll", "yaw", "tof", "baro", "agx", "agy", "agz"]
+phase_variance_threshold = 4.0       # eta = 4
+num_uavs = 22
+num_registered = 20
+train_ratio = 0.6
+val_ratio = 0.2
+test_ratio = 0.2
+num_workers = 4
+pin_memory = true
+
+[model]
+cnn_filters = 64                      # 64 filters per conv layer
+cnn_kernel_sizes = [3, 2]             # kernel sizes for 2 conv layers
+lstm_hidden = 64                      # BiLSTM: 64 per direction = 128 total
+lstm_layers = 1
+attention_heads = 4                   # 4 attention heads
+attention_layers = 2                  # 2 self-attention layers
+embedding_dim = 256                   # Final embedding dimension
+ff_dim = 512                          # Feed-forward hidden dim
+dropout = 0.1
+
+[loss]
+alpha = 1.0                           # Multi-similarity positive scaling
+beta = 10.0                           # Multi-similarity negative scaling
+margin = 0.5                          # Similarity margin mu
+epsilon = 0.1                         # Hard pair mining threshold
+
+[training]
+batch_size = 256
+learning_rate = 0.001                 # Adam lr
+epochs = 30
+optimizer = "adam"
+weight_decay = 0.0
+scheduler = "cosine"
+warmup_ratio = 0.05                   # 5% warmup steps
+min_lr = 1e-6
+precision = "bf16"
+gradient_accumulation = 1
+max_grad_norm = 1.0
+seed = 42
+
+[checkpoint]
+output_dir = "/mnt/artifacts-datai/checkpoints/securelink"
+save_every_n_steps = 500
+keep_top_k = 2
+metric = "val_loss"
+mode = "min"
+
+[early_stopping]
+enabled = true
+patience = 10
+min_delta = 1e-4
+
+[logging]
+log_dir = "/mnt/artifacts-datai/logs/securelink"
+tensorboard_dir = "/mnt/artifacts-datai/tensorboard/securelink"
+
+[ocsvm]
+kernel = "rbf"
+nu = 0.1
+gamma = "scale"

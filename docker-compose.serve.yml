@@ -1,0 +1,60 @@
+# SecureLink Docker Compose — profiles: serve, ros2, api, test
+
+services:
+  securelink:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    image: anima-securelink:latest
+    container_name: securelink
+    network_mode: host
+    env_file: .env.serve
+    volumes:
+      - weights:/data/weights
+      - /mnt/artifacts-datai/models/securelink:/data/weights:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    profiles:
+      - serve
+      - ros2
+      - api
+
+  securelink-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    image: anima-securelink:latest
+    container_name: securelink-api
+    ports:
+      - "${ANIMA_SERVE_PORT:-8080}:8080"
+    env_file: .env.serve
+    environment:
+      - ANIMA_DEVICE=cpu
+    volumes:
+      - weights:/data/weights
+      - /mnt/artifacts-datai/models/securelink:/data/weights:ro
+    profiles:
+      - api
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.serve
+    image: anima-securelink:latest
+    container_name: securelink-test
+    command: ["python", "-m", "pytest", "tests/", "-x", "-v"]
+    env_file: .env.serve
+    environment:
+      - ANIMA_DEVICE=cpu
+    volumes:
+      - ./tests:/app/tests:ro
+    profiles:
+      - test
+
+volumes:
+  weights:
