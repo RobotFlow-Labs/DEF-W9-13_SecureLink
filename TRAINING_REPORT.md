@@ -63,8 +63,8 @@
 | pth | 15.5MB | OK |
 | safetensors | 5.1MB | OK |
 | ONNX | 5.4MB | OK (verified) |
-| TensorRT FP16 | - | BLOCKED (disk space) |
-| TensorRT FP32 | - | BLOCKED (disk space) |
+| TensorRT FP16 | 3.0MB | OK |
+| TensorRT FP32 | 5.7MB | OK |
 | OC-SVM (22 models) | 1.4MB | OK |
 
 ## Artifacts
