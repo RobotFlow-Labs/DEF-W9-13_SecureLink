@@ -26,6 +26,7 @@ dependencies = [
     "tensorboard>=2.14",
     "safetensors>=0.4",
     "onnx>=1.14",
+    "onnxscript>=0.6",
     "onnxruntime>=1.16",
     "tqdm>=4.65",
     "rich>=13.0",

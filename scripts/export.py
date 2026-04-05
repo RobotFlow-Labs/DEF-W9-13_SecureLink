@@ -113,20 +113,20 @@ def export_tensorrt(
     else:
         import subprocess
 
-        for precision in ["fp32", "fp16"]:
-            out_path = output_dir / f"securelink_{precision}.engine"
-            cmd = [
-                sys.executable,
-                str(trt_script),
-                str(onnx_path),
-                "--output", str(out_path),
-                "--precision", precision,
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-            if result.returncode == 0:
-                print(f"[EXPORT] TRT {precision}: {out_path}")
-            else:
-                print(f"[EXPORT] TRT {precision} FAILED: {result.stderr[:200]}")
+        # Shared toolkit uses: --onnx PATH --output-dir DIR [--no-fp16] [--no-fp32]
+        cmd = [
+            sys.executable,
+            str(trt_script),
+            "--onnx", str(onnx_path),
+            "--output-dir", str(output_dir),
+        ]
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=600,
+        )
+        if result.returncode == 0:
+            print(f"[EXPORT] TRT: {result.stdout[-200:]}")
+        else:
+            print(f"[EXPORT] TRT FAILED: {result.stderr[:300]}")
 
 
 def main() -> None:
